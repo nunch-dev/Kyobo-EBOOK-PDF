@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Kyobo E-Book Extractor",
+  "description": "Kyobo E-Book Extractor",
+  "version": "1.0",
+  "host_permissions": ["*://*/*"],
+  "permissions": ["webRequest"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
