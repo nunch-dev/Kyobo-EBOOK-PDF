@@ -39,16 +39,52 @@ chrome.webRequest.onHeadersReceived.addListener(
       return;
     }
 
-    let curlHeaders = { ...reqHeaders };
-    curlHeaders["range"] = `bytes=0-${headers["content-length"]}`;
+    chrome.scripting.executeScript({
+      target: { tabId: details.tabId },
+      func: async (url, headers) => {
+        if (!confirm("PDF Found. Do you want to download?")) {
+          return;
+        }
 
-    let cmd = ["curl", `"${details.url}"`];
-    for (let key in curlHeaders) {
-      cmd.push(`-H "${key}: ${curlHeaders[key]}"`);
-    }
-    cmd.push(`--output ${+new Date()}.pdf`);
+        let overlay = document.createElement("div");
+        overlay.style.position = "fixed";
+        overlay.style.top = "1em";
+        overlay.style.left = "1em";
+        overlay.style.zIndex = "999999999";
+        overlay.textContent = "Downloading... This may take a long time.";
 
-    console.log(`PDF Found: ${cmd.join(" ")}`);
+        try {
+          document.body.appendChild(overlay);
+
+          let resp = await fetch(url, {
+            headers,
+          });
+          let blob = await resp.blob();
+          let objectURL = URL.createObjectURL(blob);
+
+          let link = document.createElement("a");
+          link.href = objectURL;
+          link.download = +new Date() + ".pdf";
+
+          document.body.appendChild(link);
+          link.click();
+
+          document.body.removeChild(link);
+          URL.revokeObjectURL(objectURL);
+        } catch (err) {
+          alert(`error: ${err}`);
+        } finally {
+          document.body.removeChild(overlay);
+        }
+      },
+      args: [
+        details.url,
+        {
+          ...reqHeaders,
+          range: `bytes=0-${headers["content-length"]}`,
+        },
+      ],
+    });
   },
   { urls: ["*://wviewer.kyobobook.co.kr/content/web_ebook/web_pdf/*"] },
   ["responseHeaders", "extraHeaders"]

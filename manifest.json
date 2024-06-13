@@ -4,7 +4,7 @@
   "description": "Kyobo E-Book Extractor",
   "version": "1.0",
   "host_permissions": ["*://*/*"],
-  "permissions": ["webRequest"],
+  "permissions": ["webRequest", "tabs", "scripting"],
   "background": {
     "service_worker": "background.js"
   }
